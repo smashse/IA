@@ -11,7 +11,7 @@ Repositório com curadoria de comandos universais para LLMs e diretrizes comport
 | Arquivo | Descrição |
 |---------|-----------|
 | [`Comandos/Comandos.md`](Comandos/Comandos.md) | Catálogo de comandos (`/ghost`, `OODA`, `TABLE`, `/debug`, `PARETO`, etc.). Cada comando tem propósito, exemplo e formato de uso. Funciona em qualquer LLM moderno. |
-| [`Diretrizes/Diretrizes.md`](Diretrizes/Diretrizes.md) | 10 regras de comportamento para IA: sem preâmbulo, anti-bajulação, verificação de fatos, confiança calibrada, recuo estratégico. Use como prompt de sistema. |
+| [`Diretrizes/Diretrizes.md`](Diretrizes/Diretrizes.md) | 13 regras de comportamento para IA: sem preâmbulo, anti-bajulação, verificação de fatos, confiança calibrada, recuo estratégico. Use como prompt de sistema. |
 
 ---
 
