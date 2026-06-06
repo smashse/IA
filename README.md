@@ -1,4 +1,4 @@
-# AI Commands & Behavior Guidelines
+# Comandos e Diretrizes de Comportamento para IA
 
 Repositório com curadoria de comandos universais para LLMs e diretrizes comportamentais para agentes de IA.
 
