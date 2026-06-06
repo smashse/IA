@@ -36,6 +36,6 @@ Repositório com curadoria de comandos universais para LLMs e diretrizes comport
 
 ---
 
-## 🙏 Crédito
+## Crédito
 
 Comandos validados em GPT-4, Claude 3, Gemini 1.5, Llama 3 e Mistral Large.
