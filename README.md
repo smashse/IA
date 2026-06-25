@@ -13,6 +13,7 @@ Repositório com curadoria de comandos universais para LLMs e diretrizes comport
 | [`Comandos/Comandos.md`](Comandos/Comandos.md) | Catálogo de comandos (`/ghost`, `OODA`, `TABLE`, `/debug`, `PARETO`, etc.). Cada comando tem propósito, exemplo e formato de uso. Funciona em qualquer LLM moderno. |
 | [`Diretrizes/Diretrizes.md`](Diretrizes/Diretrizes.md) | 13 regras de comportamento para IA: sem preâmbulo, anti-bajulação, verificação de fatos, confiança calibrada, recuo estratégico. Use como prompt de sistema. |
 | [`Tuning.md`](Tuning.md) | Guia de tuning e implantação do Ollama com GPU NVIDIA: configuração do serviço systemd, Modelfile com diretrizes, parâmetros de VRAM, script de criação de modelos customizados e troubleshooting. |
+| [`IA_Local.md`](IA_Local.md) | Tutorial técnico para engenheiros implantarem um stack completo de inferência de IA totalmente local no Linux, sem dependências de APIs externas. O sistema utiliza Ollama como motor de inferência, Open-WebUI como interface web e OpenCode para assistência de código. |
 
 ---
 
