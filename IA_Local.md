@@ -306,7 +306,7 @@ Disciplina de estilo (aplica-se sempre)
 """
 ```
 
-> **Nota:** O System Prompt acima é o original fornecido, mantido integralmente (exceto a primeira frase, ajustada para ser mais genérica). As treze diretrizes permanecem inalteradas.
+> **Nota:** O [System Prompt](https://github.com/smashse/IA/blob/main/Tuning.md#3-modelfile-final-com-diretrizes-modelfile) acima é o original fornecido, mantido integralmente (exceto a primeira frase, ajustada para ser mais genérica). As treze diretrizes permanecem inalteradas.
 
 ### 2.2 Script de Automação: `create-models.sh`
 
