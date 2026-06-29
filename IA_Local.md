@@ -31,10 +31,10 @@ Este guia foi escrito para distribuições Linux com `systemd` e gerenciadores d
 
 Antes de começar, instale as ferramentas que o stack utiliza:
 
-- `curl` — para download de scripts e modelos
-- `git` — para clonagem de repositórios (opcional, mas recomendado)
-- `python3` (≥ 3.10) e `pip3` — para o Open-WebUI
-- `nodejs` (≥ 18.x) e `npm` (≥ 9.x) — para o OpenCode e Freebuff
+- `curl`, para download de scripts e modelos
+- `git`, para clonagem de repositórios (opcional, mas recomendado)
+- `python3` (≥ 3.10) e `pip3`, para o Open-WebUI
+- `nodejs` (≥ 18.x) e `npm` (≥ 9.x), para o Freebuff e plugins opcionais do OpenCode
 
 ```bash
 sudo apt update
@@ -165,6 +165,8 @@ Crie um override do serviço:
 sudo systemctl edit ollama.service
 ```
 
+> Esse comando abre o editor padrão do sistema (nano, vim, etc.) e cria um arquivo _override_ em `/etc/systemd/system/ollama.service.d/`. Esse método é **mais seguro** porque as alterações sobrevivem a atualizações do Ollama. Se preferir editar o arquivo diretamente (mais intuitivo, mas sobrescrito em updates), use `sudo nano /etc/systemd/system/ollama.service`.
+
 Dentro do bloco que aparecer, adicione:
 
 ```ini
@@ -193,24 +195,77 @@ LISTEN  0  4096  0.0.0.0:11434  0.0.0.0:*  users:(("ollama",pid=5678,fd=3))
 
 O Ollama permite ajustar comportamento via variáveis de ambiente. Edite com `systemctl edit ollama.service`:
 
-| Variável                   | Padrão                             | O que faz                                             |
-| -------------------------- | ---------------------------------- | ----------------------------------------------------- |
-| `OLLAMA_HOST`              | `127.0.0.1:11434`                  | Endereço e porta de escuta                            |
-| `OLLAMA_MODELS`            | `/usr/share/ollama/.ollama/models` | Onde os modelos ficam salvos em disco                 |
-| `OLLAMA_GPU_MEMORY`        | —                                  | Limite de VRAM por GPU (ex: `4g`)                     |
-| `OLLAMA_NUM_PARALLEL`      | `1`                                | Requisições simultâneas                               |
-| `OLLAMA_KEEP_ALIVE`        | `5m`                               | Tempo que o modelo fica carregado após uso            |
-| `OLLAMA_MAX_LOADED_MODELS` | `1`                                | Quantos modelos podem ficar na memória ao mesmo tempo |
+| Variável                          | Padrão                             | O que faz                                                                                        |
+| --------------------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `OLLAMA_HOST`                     | `127.0.0.1:11434`                  | Endereço e porta de escuta                                                                       |
+| `OLLAMA_MODELS`                   | `/usr/share/ollama/.ollama/models` | Onde os modelos ficam salvos em disco                                                            |
+| `OLLAMA_FLASH_ATTENTION`          | `0`                                | Ativa Flash Attention (`1`) para acelerar geração e reduzir VRAM                                 |
+| `OLLAMA_KV_CACHE_TYPE`            | `f16`                              | Quantização do cache de contexto (`q8_0` economiza ~50% VRAM em relação a `f16`)                 |
+| `OLLAMA_NUM_CTX`                  | `2048`                             | Tamanho máximo da janela de contexto em tokens (modelos sobrescrevem via `num_ctx` no Modelfile) |
+| `OLLAMA_GPU_MEMORY`               | —                                  | Limite de VRAM por GPU (ex: `4g`)                                                                |
+| `OLLAMA_NUM_PARALLEL`             | `1`                                | Requisições simultâneas                                                                          |
+| `OLLAMA_KEEP_ALIVE`               | `5m`                               | Tempo que o modelo fica carregado após uso                                                       |
+| `OLLAMA_MAX_LOADED_MODELS`        | `1`                                | Quantos modelos podem ficar na memória ao mesmo tempo                                            |
+| `GGML_CUDA_ENABLE_UNIFIED_MEMORY` | ligado (depende do driver)         | Memória unificada GPU+RAM; desligar (`OFF`) evita lentidão em alguns sistemas                    |
 
-Exemplo de configuração para uso mais intenso:
+Exemplos de configuração:
 
 ```ini
 [Service]
+# Uso mais intenso (múltiplas requisições simultâneas)
 Environment="OLLAMA_HOST=0.0.0.0:11434"
 Environment="OLLAMA_NUM_PARALLEL=4"
 Environment="OLLAMA_KEEP_ALIVE=10m"
 Environment="OLLAMA_MAX_LOADED_MODELS=2"
 ```
+
+#### Recomendações práticas por setup
+
+**Setup 1: 1 GPU 8GB + modelo 8B Q4_K_M** (ex: Qwen3 8B, Llama 3.1 8B)
+
+O modelo ocupa ~5-6 GB de VRAM. Com `q8_0` no cache, o contexto de 16k adiciona ~1 GB, totalizando ~7 GB, cabe com folga sem arriscar OOM.
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+Environment="OLLAMA_FLASH_ATTENTION=1"
+Environment="OLLAMA_NUM_PARALLEL=1"
+Environment="OLLAMA_KV_CACHE_TYPE=q8_0"
+Environment="OLLAMA_NUM_CTX=16384"
+Environment="OLLAMA_KEEP_ALIVE=5m"
+```
+
+| Variável                    | Valor        | Por quê                                                              |
+| --------------------------- | ------------ | -------------------------------------------------------------------- |
+| `OLLAMA_NUM_CTX=16384`      | 16k          | Conversas longas sem estourar VRAM; ainda sobra ~1-2 GB para sistema |
+| `OLLAMA_KV_CACHE_TYPE=q8_0` | q8_0         | Cache ~50% menor que f16 com perda de qualidade irrelevante          |
+| `OLLAMA_FLASH_ATTENTION=1`  | ligado       | Acelera geração sem aumentar consumo de VRAM                         |
+| `OLLAMA_NUM_PARALLEL=1`     | 1 requisição | Evita picos de VRAM; essencial em GPU de 8GB                         |
+
+**Setup 2: 2 GPUs 8GB + modelo 14B Q4_K_M** (ex: Qwen3 14B, Gemma 3 12B)
+
+Com 16 GB combinados, o modelo consome ~9-10 GB. O cache em `q8_0` com 24k contexto adiciona ~1.5 GB. Sobram ~4-5 GB para o sistema.
+
+```ini
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+Environment="OLLAMA_FLASH_ATTENTION=1"
+Environment="OLLAMA_NUM_PARALLEL=1"
+Environment="OLLAMA_KV_CACHE_TYPE=q8_0"
+Environment="OLLAMA_NUM_CTX=24576"
+Environment="OLLAMA_SCHED_SPREAD=true"
+Environment="OLLAMA_NUM_GPU=999"
+Environment="OLLAMA_KEEP_ALIVE=5m"
+```
+
+| Variável                    | Valor  | Por quê                                                                    |
+| --------------------------- | ------ | -------------------------------------------------------------------------- |
+| `OLLAMA_NUM_CTX=24576`      | 24k    | Modelo maior precisa de mais contexto útil; acima disso o ganho é marginal |
+| `OLLAMA_SCHED_SPREAD=true`  | ligado | Distribui camadas entre as GPUs mesmo se o modelo coubesse em uma          |
+| `OLLAMA_NUM_GPU=999`        | todas  | Garante que nenhuma camada caia em CPU                                     |
+| `OLLAMA_KV_CACHE_TYPE=q8_0` | q8_0   | Essencial para não roubar VRAM do modelo em GPUs de 8GB                    |
+
+> **Regra geral para `OLLAMA_NUM_CTX`:** 8192 é seguro em qualquer setup; 16384 é o ideal para 8GB; 24576–32768 para 12GB+ ou multi-GPU; 65536 só se você realmente processa documentos muito longos **e** tem VRAM sobrando depois de carregar o modelo. O contexto custa caro em VRAM, não aumente sem necessidade.
 
 ### 1.5 Multi-GPU: Rodando Modelos Maiores
 
@@ -254,7 +309,7 @@ memory.total [MiB]
 | Variável               | Função                                 | Exemplo              |
 | ---------------------- | -------------------------------------- | -------------------- |
 | `CUDA_VISIBLE_DEVICES` | Escolhe quais GPUs o Ollama enxerga    | `0,1`                |
-| `OLLAMA_SCHED_SPREAD`  | Força distribuição entre todas as GPUs | `true`               |
+| `OLLAMA_SCHED_SPREAD`  | Força distribuição entre todas as GPUs | `1` (ou `true`)      |
 | `OLLAMA_NUM_GPU`       | Número máximo de GPUs para inference   | `2` ou `999` (todas) |
 
 Para garantir que todas as camadas vão para GPU (sem cair no CPU):
@@ -397,9 +452,9 @@ Com o Ollama rodando, podemos criar modelos customizados. A ideia é simples: vo
 
 Um Modelfile tem três partes principais:
 
-- **FROM** — qual modelo base usar
-- **Parâmetros** — como o modelo se comporta (hardware e sampling)
-- **SYSTEM** — as instruções de comportamento fixas
+- **FROM**, qual modelo base usar
+- **Parâmetros**, como o modelo se comporta (hardware e sampling)
+- **SYSTEM**, as instruções de comportamento fixas
 
 Crie o arquivo `Modelfile` no diretório de trabalho. O bloco `FROM` será substituído pelo script de automação para cada modelo base:
 
@@ -682,10 +737,18 @@ sudo systemctl enable --now open-webui
 
 ### 3.2 OpenCode
 
-O OpenCode é um assistente de código via terminal que se conecta ao Ollama.
+O OpenCode é um agente de código open source que se conecta ao Ollama. A forma mais simples e recomendada de instalar é com o script oficial via curl:
 
 ```bash
-npm install -g opencode-ai
+curl -fsSL https://opencode.ai/install | bash
+```
+
+O script baixa o binário estático mais recente do GitHub Releases e o instala em `$HOME/.local/bin` (ou no diretório definido por `$OPENCODE_INSTALL_DIR`). Não requer Node.js, Homebrew ou outros gerenciadores.
+
+Também é possível instalar via npm (se você já tiver Node.js):
+
+```bash
+npm install -g opencode-ai        # pacote é opencode-ai, NÃO opencode
 ```
 
 Para configurar automaticamente com todos os modelos `tech-`, crie o script `create-opencode-config.sh`:
@@ -796,10 +859,10 @@ Digita `/` no prompt do OpenCode para ver os comandos disponíveis. Os principai
 
 ### Atalhos de teclado
 
-- **Tab** — alterna entre os agentes primários (Build e Plan)
-- **Ctrl+X** — tecla leader para atalhos (ex: `Ctrl+X C` para compact, `Ctrl+X N` para new)
-- **@** — busca fuzzy de arquivos para referenciar no prompt
-- **!** — executa um comando bash antes de enviar (ex: `!git status`)
+- **Tab**, alterna entre os agentes primários (Build e Plan)
+- **Ctrl+X**, tecla leader para atalhos (ex: `Ctrl+X C` para compact, `Ctrl+X N` para new)
+- **@**, busca fuzzy de arquivos para referenciar no prompt
+- **!**, executa um comando bash antes de enviar (ex: `!git status`)
 
 ### Agentes
 
@@ -1185,7 +1248,7 @@ sudo userdel ollama
 
 **Multi-GPU** – Configuração com duas ou mais GPUs para inference de LLMs. O Ollama distribui automaticamente as camadas do modelo entre GPUs disponíveis via pipeline parallelism. O objetivo principal é rodar modelos maiores que não cabem em uma única GPU, não ganho linear de velocidade. O tráfego entre GPUs ocorre pelo PCIe (ou NVLink quando disponível), o que adiciona latência.
 
-**npm (Node Package Manager)** – Gerenciador de pacotes do ecossistema Node.js. Usado para instalar OpenCode e Freebuff.
+**npm (Node Package Manager)** – Gerenciador de pacotes do ecossistema Node.js. Usado para instalar Freebuff e plugins do OpenCode. Para o OpenCode em si, o método recomendado é o script curl oficial (`curl -fsSL https://opencode.ai/install | bash`).
 
 **num_ctx** – Parâmetro do Modelfile que define o tamanho da janela de contexto em tokens. Valores maiores permitem conversas mais longas, mas aumentam o consumo de memória. O padrão do Ollama é 2048; este guia usa 8192.
 
