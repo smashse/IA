@@ -1,0 +1,60 @@
+{
+  "initialized": "2026-07-06T01:11:33.523711",
+  "total_calls": 1,
+  "agents": {
+    "tech-lead": {
+      "calls": 1,
+      "total_time": 45
+    },
+    "backend": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "frontend": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "devops": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "qa": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "security": {
+      "calls": 0,
+      "total_time": 0
+    }
+  },
+  "commands": {
+    "code-review": {
+      "calls": 1,
+      "total_time": 45
+    },
+    "launch-feature": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "incident": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "perf-audit": {
+      "calls": 0,
+      "total_time": 0
+    },
+    "security-audit": {
+      "calls": 0,
+      "total_time": 0
+    }
+  },
+  "history": [
+    {
+      "timestamp": "2026-07-06T04:11:35Z",
+      "agent": "tech-lead",
+      "command": "code-review",
+      "duration": 45
+    }
+  ]
+}
