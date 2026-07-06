@@ -1265,7 +1265,7 @@ cat > ~/.config/opencode/opencode.json << 'EOF'
         "baseURL": "http://localhost:11434/v1"
       },
       "models": {
-        "tech-glm4:latest": { "name": "Tech GLM4" },
+        "glm4:latest": { "name": "GLM4" },
         "llama3.2:8b": { "name": "Llama 3.2 8B" },
         "qwen2.5-coder:7b": { "name": "Qwen2.5-Coder 7B" },
         "qwen2.5-coder:14b": { "name": "Qwen2.5-Coder 14B" },
@@ -1647,7 +1647,7 @@ model: ollama/qwen3.5:27b
 | Qwen3-Coder 30B (MoE) | Apache 2.0 | ~19GB | Código (3.3B active) | 256K |
 | Qwen 3.5 27B | Apache 2.0 | ~16GB | Reasoning, multimodal | 256K |
 | DeepSeek R1 14B | MIT | ~8.7GB | Raciocínio matemático | 128K |
-| **GLM-4 (tech-glm4)** | MIT | ~15GB | Raciocínio técnico, coding | 128K |
+| **GLM-4 (glm4)** | MIT | ~15GB | Raciocínio técnico, coding | 128K |
 | GLM-5.1 | MIT | ~24GB | SWE-bench Pro | 128K |
 | Gemma 4 26B | Apache 2.0 | ~14GB | Google ecosystem | 128K |
 | Mistral Small 3 | Apache 2.0 | ~16GB | Velocidade (~50 t/s) | 128K |
